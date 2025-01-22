@@ -1,0 +1,24 @@
+server:
+  http:
+    addr: :8080
+    timeout: 1s
+  grpc:
+    timeout: 2s
+
+services:
+  user:
+    name: user-service
+    timeout: 2s
+  message:
+    name: message-service
+    timeout: 2s
+
+etcd:
+  endpoints:
+    - etcd:2379
+  dialTimeout: 5s
+
+log:
+  level: info
+  format: json
+  output: stdout 

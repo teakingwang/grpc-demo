@@ -1,0 +1,36 @@
+server:
+  host: 0.0.0.0
+  port: 50051
+  timeout: 1s
+
+database:
+  driver: mysql
+  host: mysql
+  port: 3306
+  user: root
+  password: root123
+  dbname: grpc_demo
+  #source: root:root123@tcp(mysql:3306)/grpc_demo?charset=utf8mb4&parseTime=True&loc=Local
+  maxOpenConns: 20
+  maxIdleConns: 10
+  connMaxLifetime: 3600s
+
+
+etcd:
+  endpoints:
+    - etcd:2379
+  dialTimeout: 5s
+  registerTTL: 10s
+  registerInterval: 3s
+
+service:
+  name: user-service
+  version: v1.0.0
+
+metrics:
+  addr: :9090
+
+log:
+  level: info
+  format: json
+  output: stdout

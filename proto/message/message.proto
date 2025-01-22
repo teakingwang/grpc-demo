@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package message;
+option go_package = "grpc-demo/proto/message";
+
+import "google/api/annotations.proto";
+
+// MessageService 消息服务接口定义
+service MessageService {
+  // SendMessage 发送消息
+  // 创建一条新的消息记录
+  rpc SendMessage (SendMessageRequest) returns (SendMessageResponse) {
+    option (google.api.http) = {
+      post: "/v1/messages"
+      body: "*"
+    };
+  }
+  
+  // GetMessages 获取消息列表
+  // 获取指定用户收到的所有消息
+  rpc GetMessages (GetMessagesRequest) returns (GetMessagesResponse) {
+    option (google.api.http) = {
+      get: "/v1/messages"
+    };
+  }
+}
+
+// Message 消息实体
+message Message {
+  int64 id = 1;              // 消息ID
+  int64 from_user_id = 2;    // 发送者用户ID
+  int64 to_user_id = 3;      // 接收者用户ID
+  string content = 4;         // 消息内容
+  int64 created_at = 5;      // 创建时间(Unix时间戳)
+}
+
+// SendMessageRequest 发送消息请求
+message SendMessageRequest {
+  int64 from_user_id = 1;    // 发送者用户ID
+  int64 to_user_id = 2;      // 接收者用户ID
+  string content = 3;         // 消息内容
+}
+
+// SendMessageResponse 发送消息响应
+message SendMessageResponse {
+  int64 message_id = 1;      // 创建的消息ID
+}
+
+// GetMessagesRequest 获取消息列表请求
+message GetMessagesRequest {
+  int64 user_id = 1;         // 用户ID
+}
+
+// GetMessagesResponse 获取消息列表响应
+message GetMessagesResponse {
+  repeated Message messages = 1;  // 消息列表
+} 

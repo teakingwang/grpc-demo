@@ -1,0 +1,31 @@
+server:
+  http:
+    addr: :8080
+    timeout: 1s
+  grpc:
+    timeout: 3s
+
+services:
+  user:
+    name: user-service
+    timeout: 3s
+  message:
+    name: message-service
+    timeout: 3s
+
+etcd:
+  endpoints:
+    - etcd-1:2379
+    - etcd-2:2379
+    - etcd-3:2379
+  dialTimeout: 5s
+
+log:
+  level: warn
+  format: json
+  output: file    # 生产环境输出到文件
+  file:
+    path: /var/log/api-gateway.log
+    maxSize: 100    # MB
+    maxBackups: 10
+    maxAge: 30      # days 

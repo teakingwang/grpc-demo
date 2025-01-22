@@ -1,0 +1,50 @@
+groups:
+- name: grpc_alerts  # 告警规则组名称
+  rules:
+  # 服务可用性告警
+  - alert: ServiceDown  # 服务不可用告警
+    expr: up == 0
+    for: 1m            # 持续1分钟触发
+    labels:
+      severity: critical  # 严重级别
+    annotations:
+      summary: "Service {{ $labels.job }} is down"  # 告警摘要
+      description: "Service {{ $labels.job }} has been down for more than 1 minute"  # 详细描述
+
+  # 高错误率告警
+  - alert: HighErrorRate  # 高错误率告警
+    expr: |
+      sum(rate(grpc_requests_total{status!="success"}[5m])) by (job)
+      /
+      sum(rate(grpc_requests_total[5m])) by (job)
+      > 0.1
+    for: 5m            # 持续5分钟触发
+    labels:
+      severity: warning  # 警告级别
+    annotations:
+      summary: "High error rate for {{ $labels.job }}"
+      description: "Error rate is above 10% for the last 5 minutes"
+
+  # 高延迟告警
+  - alert: HighLatency  # 高延迟告警
+    expr: |
+      histogram_quantile(0.95, sum(rate(grpc_request_duration_seconds_bucket[5m])) by (job, le))
+      > 0.5
+    for: 5m            # 持续5分钟触发
+    labels:
+      severity: warning
+    annotations:
+      summary: "High latency for {{ $labels.job }}"
+      description: "95th percentile latency is above 500ms for the last 5 minutes"
+
+  # 高负载告警
+  - alert: HighLoad  # 系统负载告警
+    expr: |
+      sum(rate(grpc_requests_in_progress[5m])) by (job)
+      > 100
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High load for {{ $labels.job }}"
+      description: "Service is handling too many concurrent requests" 

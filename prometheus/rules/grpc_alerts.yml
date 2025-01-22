@@ -1,0 +1,78 @@
+groups:
+  - name: grpc_alerts
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(grpc_requests_total{status!="success"}[5m])) by (method)
+          /
+          sum(rate(grpc_requests_total[5m])) by (method)
+          > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High gRPC error rate
+          description: "{{ $labels.method }} has a high error rate (> 10%)"
+
+      - alert: SlowRequests
+        expr: |
+          histogram_quantile(0.95, sum(rate(grpc_request_duration_seconds_bucket[5m])) by (le, method))
+          > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Slow gRPC requests
+          description: "{{ $labels.method }} p95 latency is above 1s"
+
+      - alert: HighRequestRate
+        expr: |
+          sum(rate(grpc_requests_total[5m])) by (method)
+          > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High request rate
+          description: "{{ $labels.method }} is receiving more than 100 requests per second"
+
+      - alert: LargeResponses
+        expr: |
+          histogram_quantile(0.95, sum(rate(grpc_response_size_bytes_bucket[5m])) by (le, method))
+          > 1048576  # 1MB
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Large response sizes
+          description: "{{ $labels.method }} p95 response size is above 1MB"
+
+      - alert: HighConcurrency
+        expr: |
+          sum(grpc_requests_in_progress) by (method)
+          > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High concurrent requests
+          description: "{{ $labels.method }} has more than 50 concurrent requests"
+
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Service is down
+          description: "{{ $labels.job }} instance {{ $labels.instance }} is down"
+
+      - alert: HighMemoryUsage
+        expr: |
+          process_resident_memory_bytes / 1024 / 1024 > 500  # 500MB
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High memory usage
+          description: "{{ $labels.job }} is using more than 500MB of memory" 

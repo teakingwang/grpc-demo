@@ -1,0 +1,223 @@
+# 自定义网络配置
+networks:
+  grpc_net:
+    external: true
+
+services:
+  # MySQL数据库服务
+  mysql:
+    image: mysql:8.0                    # 使用MySQL 8.0版本镜像
+    container_name: grpc_mysql          # 容器名称
+    environment:                        # 环境变量配置
+      MYSQL_ROOT_PASSWORD: root123      # MySQL root用户密码
+      MYSQL_DATABASE: grpc_demo         # 默认创建的数据库名
+    ports:
+      - "3306:3306"                    # 端口映射,格式为"主机端口:容器端口"
+    volumes:
+      - /Users/teaking/dbdata/mysql/data:/var/lib/mysql      # 修改为本地目录路径
+    networks:
+      - grpc_net                       # 连接到grpc_net网络
+    healthcheck:                       # 健康检查配置
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123"]
+      interval: 5s                     # 检查间隔
+      timeout: 5s                      # 检查超时时间
+      retries: 5                       # 重试次数
+
+  # Redis缓存服务
+  redis:
+    image: redis:6.2                   # 使用Redis 6.2版本镜像
+    container_name: grpc_redis         # 容器名称
+    ports:
+      - "6379:6379"                   # Redis默认端口映射
+    networks:
+      - grpc_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 用户服务
+  user-service:
+    build:
+      context: .                       # 构建上下文目录
+      dockerfile: user-service/Dockerfile  # Dockerfile路径
+    container_name: grpc_user_service
+    ports:
+      - "50051:50051"                 # gRPC服务端口
+      - "9091:9090"                   # Prometheus指标端口
+    depends_on:                        # 依赖服务
+      mysql:
+        condition: service_healthy     # 等待MySQL健康检查通过
+      etcd:
+        condition: service_healthy     # 等待etcd健康检查通过
+    networks:
+      - grpc_net
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:50051"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    environment:                       # 环境变量配置
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=root123
+      - DB_NAME=grpc_demo
+      - ETCD_ENDPOINTS=etcd:2379
+    restart: on-failure
+    volumes:
+      - ./configs/user-service/config.${ENV:-dev}.yaml:/app/configs/config.yaml
+
+  # 消息服务
+  message-service:
+    build:
+      context: .
+      dockerfile: message-service/Dockerfile
+    container_name: grpc_message_service
+    ports:
+      - "50052:50052"                 # gRPC服务端口
+      - "9092:9090"                   # Prometheus指标端口
+    depends_on:
+      mysql:
+        condition: service_healthy
+      etcd:
+        condition: service_healthy
+    networks:
+      - grpc_net
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:50052"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=root123
+      - DB_NAME=grpc_demo
+      - ETCD_ENDPOINTS=etcd:2379
+    restart: unless-stopped
+    volumes:
+      - ./configs/message-service/config.${ENV:-dev}.yaml:/app/configs/config.yaml
+
+  # API网关服务
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: grpc_gateway
+    ports:
+      - "8080:8080"                   # HTTP API端口
+    depends_on:
+      etcd:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    networks:
+      - grpc_net
+    environment:
+      - ETCD_ENDPOINTS=etcd:2379
+    volumes:
+      - ./configs/api-gateway/config.${ENV:-dev}.yaml:/app/configs/config.yaml
+    restart: on-failure
+
+  # etcd服务发现和配置中心
+  etcd:
+    image: bitnami/etcd:3.5            # 使用bitnami的etcd 3.5版本镜像
+    container_name: grpc_etcd
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes  # 允许无认证访问
+      - ENVIRONMENT=${ENVIRONMENT}
+    ports:
+      - "2379:2379"                   # 客户端API端口
+      - "2380:2380"                   # 节点间通信端口
+    networks:
+      - grpc_net
+    healthcheck:
+      test: [ "CMD", "etcdctl", "--endpoints=http://localhost:2379", "endpoint", "health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  init_etcd:
+    container_name: init_etcd
+    depends_on:
+      etcd:
+        condition: service_healthy
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        ENVIRONMENT: ${ENVIRONMENT}
+    networks:
+      - grpc_net
+    restart: "no"  # 初始化完成后，不需要重启此容器
+
+  etcdkeeper:
+    image: evildecay/etcdkeeper:v0.7.6  # 使用 quay.io 镜像
+    container_name: etcdkeeper
+    networks:
+      - grpc_net
+    ports:
+      - "4001:8080"  # 映射 4001 端口到主机，方便访问 Web UI
+    environment:
+      - ETCD_ENDPOINTS=http://grpc_etcd:2379  # 你的 etcd 服务地址，确保使用你的 etcd 服务器地址
+    depends_on:
+      - etcd
+    restart: always
+
+  # Prometheus监控服务
+#  prometheus:
+#    image: prom/prometheus:v2.30.3
+#    container_name: grpc_prometheus
+#    volumes:
+#      - ./prometheus.yml:/etc/prometheus/prometheus.yml           # 主配置文件
+#      - ./prometheus/rules:/etc/prometheus/rules                 # 告警规则目录
+#    ports:
+#      - "9092:9090"                   # Web UI端口
+#    networks:
+#      - grpc_net
+#    depends_on:
+#      - user-service
+#      - message-service
+#      - alertmanager
+#    command:                          # 启动命令配置
+#      - '--config.file=/etc/prometheus/prometheus.yml'
+#      - '--storage.tsdb.path=/prometheus'
+#      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+#      - '--web.console.templates=/usr/share/prometheus/consoles'
+#      - '--web.enable-lifecycle'
+#      - '--alertmanager.url=http://alertmanager:9093'
+
+  # Alertmanager告警管理器
+#  alertmanager:
+#    image: prom/alertmanager:v0.23.0
+#    container_name: grpc_alertmanager
+#    volumes:
+#      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml  # 配置文件
+#      - /Users/teaking/dbdata/alertmanager/data:/alertmanager              # 修改为本地目录路径
+#    ports:
+#      - "9093:9093"                   # Web UI端口
+#    networks:
+#      - grpc_net
+#    command:
+#      - '--config.file=/etc/alertmanager/alertmanager.yml'
+#      - '--storage.path=/alertmanager'
+
+  # Grafana可视化平台
+#  grafana:
+#    image: grafana/grafana:8.2.2
+#    container_name: grpc_grafana
+#    ports:
+#      - "3000:3000"                   # Web UI端口
+#    volumes:
+#      - /Users/teaking/dbdata/grafana/data:/var/lib/grafana                          # 数据持久化
+#      - ./grafana/provisioning:/etc/grafana/provisioning       # 配置文件目录
+#    networks:
+#      - grpc_net
+#    depends_on:
+#      - prometheus
+#    environment:
+#      - GF_SECURITY_ADMIN_PASSWORD=admin123                    # 管理员密码
+#      - GF_USERS_ALLOW_SIGN_UP=false                          # 禁止注册新用户

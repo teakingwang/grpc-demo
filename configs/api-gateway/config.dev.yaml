@@ -1,0 +1,24 @@
+server:
+  http:
+    addr: :8080
+    timeout: 1s
+  grpc:
+    timeout: 1s
+
+services:
+  user:
+    name: user-service
+    timeout: 1s
+  message:
+    name: message-service
+    timeout: 1s
+
+etcd:
+  endpoints:
+    - localhost:2379
+  dialTimeout: 5s
+
+log:
+  level: debug    # 开发环境使用 debug 级别
+  format: json
+  output: stdout 
