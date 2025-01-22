@@ -69,38 +69,6 @@ services:
     volumes:
       - ./configs/user-service/config.${ENV:-dev}.yaml:/app/configs/config.yaml
 
-  # 消息服务
-  message-service:
-    build:
-      context: .
-      dockerfile: message-service/Dockerfile
-    container_name: grpc_message_service
-    ports:
-      - "50052:50052"                 # gRPC服务端口
-      - "9092:9090"                   # Prometheus指标端口
-    depends_on:
-      mysql:
-        condition: service_healthy
-      etcd:
-        condition: service_healthy
-    networks:
-      - grpc_net
-    healthcheck:
-      test: ["CMD", "grpc_health_probe", "-addr=:50052"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    environment:
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_USER=root
-      - DB_PASSWORD=root123
-      - DB_NAME=grpc_demo
-      - ETCD_ENDPOINTS=etcd:2379
-    restart: unless-stopped
-    volumes:
-      - ./configs/message-service/config.${ENV:-dev}.yaml:/app/configs/config.yaml
-
   # API网关服务
   api-gateway:
     build:

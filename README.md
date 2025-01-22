@@ -61,6 +61,16 @@ make proto
 
 # 构建项目
 make build
+
+# etcd健康检查
+etcdctl --endpoints=http://etcd:2379 endpoint health
+
+# 测试grpc
+brew install grpcurl (mac安装)
+grpcurl -H "Authorization: Bearer your_token_value" -d '{"id": "1"}' -plaintext localhost:50051 user.UserService.GetUser
+
+# 测试grpcgateway
+curl -H "Authorization: Bearer your_token_value" http://localhost:8080/v1/user/1
 ```
 
 ### 使用 Docker 运行

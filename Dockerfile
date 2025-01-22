@@ -26,7 +26,6 @@ ARG ENVIRONMENT=dev
 # 从构建阶段复制编译好的二进制文件和配置文件到运行阶段
 COPY --from=builder /app/grpc-demo/bin/etcd-config-init .
 COPY --from=builder /app/grpc-demo/configs/user-service/config.$ENVIRONMENT.yaml /app/configs/user-service/
-COPY --from=builder /app/grpc-demo/configs/message-service/config.$ENVIRONMENT.yaml /app/configs/message-service/
 COPY --from=builder /app/grpc-demo/configs/api-gateway/config.$ENVIRONMENT.yaml /app/configs/api-gateway/
 
 CMD ["./etcd-config-init"]

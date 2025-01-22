@@ -79,7 +79,7 @@ func main() {
 	registry, err := discovery.NewServiceRegistry([]string{etcdEndpoint}, &discovery.Service{
 		Name:    "user-service", // 服务名称
 		ID:      "user-1",       // 服务实例ID
-		Address: "127.0.0.1",    // 服务地址
+		Address: "user-service", // 服务地址
 		Port:    50051,          // 服务端口
 	})
 	if err != nil {

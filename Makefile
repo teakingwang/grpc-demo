@@ -1,4 +1,4 @@
-.PHONY: all proto clean user-service message-service api-gateway build-all test lint deps etcd
+.PHONY: all proto clean user-service api-gateway build-all test lint deps etcd
 
 # 设置 Go 编译器参数
 GOPATH:=$(shell go env GOPATH)
@@ -12,11 +12,9 @@ PROTO_DIR=proto
 
 # 设置服务名称和输出路径
 USER_SERVICE=user-service
-MESSAGE_SERVICE=message-service
 API_GATEWAY=api-gateway
 ETCD_CONFIG_INIT=etcd-config-init
 USER_SERVICE_PATH=user-service/cmd
-MESSAGE_SERVICE_PATH=message-service/cmd
 API_GATEWAY_PATH=api-gateway/cmd
 ETCD_CONFIG_INIT_PATH=tools/etcd-config-init
 
@@ -29,37 +27,25 @@ VERSION := $(shell git describe --tags --always --dirty)
 BUILD_TIME := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 LDFLAGS := -X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME)
 
-all: proto user-service message-service api-gateway etcd
+all: proto user-service api-gateway etcd
 
 # 生成 proto 文件
 proto:
 	@echo "生成 proto 文件..."
 	@mkdir -p $(PROTO_DIR)/user
-	@mkdir -p $(PROTO_DIR)/message
 	protoc --proto_path=. \
 		--proto_path=./third_party/googleapis \
 		--go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		--grpc-gateway_out=. --grpc-gateway_opt=paths=source_relative \
 		$(PROTO_DIR)/user/user.proto
-	protoc --proto_path=. \
-		--proto_path=./third_party/googleapis \
-		--go_out=. --go_opt=paths=source_relative \
-		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		--grpc-gateway_out=. --grpc-gateway_opt=paths=source_relative \
-		$(PROTO_DIR)/message/message.proto
+# 如果有其他微服务proto，安装相同的方式生成即可
 
 # 构建 user-service
 user-service:
 	@echo "构建 user-service..."
 	@mkdir -p $(OUT_DIR)
 	$(GOBUILD) -ldflags "$(LDFLAGS)"  -o $(OUT_DIR)/$(USER_SERVICE) ./$(USER_SERVICE_PATH)
-
-# 构建 message-service
-message-service:
-	@echo "构建 message-service..."
-	@mkdir -p $(OUT_DIR)
-	$(GOBUILD) -ldflags "$(LDFLAGS)"  -o $(OUT_DIR)/$(MESSAGE_SERVICE) ./$(MESSAGE_SERVICE_PATH)
 
 # 构建 api-gateway
 api-gateway:
@@ -80,7 +66,7 @@ clean:
 	@rm -rf $(OUT_DIR)
 	$(GOCLEAN) 
 
-build-all: message-service user-service api-gateway
+build-all: user-service api-gateway
 	# 这里可以添加其他服务的构建命令 
 
 # 添加测试命令

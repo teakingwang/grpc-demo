@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/teakingwang/grpc-demo/pkg/discovery"
-	messagepb "github.com/teakingwang/grpc-demo/proto/message"
 	userpb "github.com/teakingwang/grpc-demo/proto/user"
 )
 
@@ -51,6 +50,7 @@ func main() {
 	}
 	log.Printf("Service discovery created successfully")
 
+	/** 以下代码是 API Gateway 的主要逻辑 **/
 	// 发现用户服务实例
 	log.Printf("Attempting to discover user service...")
 	userServices, err := disc.GetService(ctx, "user-service")
@@ -75,23 +75,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// 发现消息服务实例
-	msgServices, err := disc.GetService(ctx, "message-service")
-	if err != nil || len(msgServices) == 0 {
-		log.Fatal("message service not found")
-	}
-	// 构造消息服务地址
-	msgAddr := fmt.Sprintf("%s:%d", msgServices[0].Address, msgServices[0].Port)
-	log.Printf("Message service address: %s", msgAddr)
-
-	// 注册消息服务的 HTTP 处理器
-	err = messagepb.RegisterMessageServiceHandlerFromEndpoint(
-		ctx, mux, msgAddr,
-		[]grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// 其他微服务参照上面的代码添加即可
 
 	// 启动 HTTP 服务器
 	log.Printf("API Gateway starting on :8080")
