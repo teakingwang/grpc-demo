@@ -10,7 +10,7 @@ service UserService {
   // CreateUser 创建新用户
   rpc CreateUser (CreateUserRequest) returns (CreateUserResponse) {
     option (google.api.http) = {
-      post: "/v1/users"
+      post: "/v1/user"
       body: "*"
     };
   }
@@ -18,7 +18,7 @@ service UserService {
   // GetUser 获取用户信息
   rpc GetUser (GetUserRequest) returns (GetUserResponse) {
     option (google.api.http) = {
-      get: "/v1/users/{id}"
+      get: "/v1/user/{id}"
     };
   }
 }

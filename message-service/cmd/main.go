@@ -31,7 +31,7 @@ import (
 
 func main() {
 	// todo换成读取配置文件
-	etcdEndpoint := "http://etcd:2379"
+	etcdEndpoint := "http://127.0.0.1:2379"
 
 	// 初始化配置管理器,用于从etcd获取和保存配置
 	cfgCli, err := config.NewConfig([]string{etcdEndpoint})
@@ -80,7 +80,7 @@ func main() {
 	registry, err := discovery.NewServiceRegistry([]string{etcdEndpoint}, &discovery.Service{
 		Name:    "message-service",
 		ID:      "message-1",
-		Address: "message-service",
+		Address: "127.0.0.1",
 		Port:    50052,
 	})
 	if err != nil {
@@ -97,7 +97,7 @@ func main() {
 	go func() {
 		mux := http.NewServeMux()
 		mux.Handle("/metrics", promhttp.Handler())
-		if err := http.ListenAndServe(":9090", mux); err != nil {
+		if err := http.ListenAndServe(":9092", mux); err != nil {
 			logger.Fatal("Failed to start metrics server", zap.Error(err))
 		}
 	}()

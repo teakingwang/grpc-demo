@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"google.golang.org/grpc/reflection"
 	"log"
 	"net"
 	"net/http"
@@ -45,7 +46,6 @@ func main() {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		cfg.Database.User, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.Dbname)
 	db, err := sql.Open("mysql", dsn)
-	log.Println(dsn)
 	if err != nil {
 		logger.Fatal("Failed to connect to database", zap.Error(err))
 	}
@@ -63,6 +63,7 @@ func main() {
 	// 注册用户服务
 	userService := service.NewUserService(db)
 	pb.RegisterUserServiceServer(grpcServer, userService)
+	reflection.Register(grpcServer)
 
 	// 注册健康检查服务
 	healthChecker := health.NewHealthChecker()
@@ -78,7 +79,7 @@ func main() {
 	registry, err := discovery.NewServiceRegistry([]string{etcdEndpoint}, &discovery.Service{
 		Name:    "user-service", // 服务名称
 		ID:      "user-1",       // 服务实例ID
-		Address: "user-service", // 服务地址
+		Address: "127.0.0.1",    // 服务地址
 		Port:    50051,          // 服务端口
 	})
 	if err != nil {
@@ -95,7 +96,7 @@ func main() {
 	go func() {
 		mux := http.NewServeMux()
 		mux.Handle("/metrics", promhttp.Handler())
-		if err := http.ListenAndServe(":9090", mux); err != nil {
+		if err := http.ListenAndServe(":9091", mux); err != nil {
 			logger.Fatal("Failed to start metrics server", zap.Error(err))
 		}
 	}()
