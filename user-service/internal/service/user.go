@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/teakingwang/grpc-demo/pkg/errors"
-	pb "github.com/teakingwang/grpc-demo/proto/user"
+	pb "github.com/teakingwang/grpc-demo/proto/user/gen"
 
 	"golang.org/x/crypto/bcrypt"
 )

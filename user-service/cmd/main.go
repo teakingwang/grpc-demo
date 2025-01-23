@@ -20,7 +20,7 @@ import (
 	"github.com/teakingwang/grpc-demo/pkg/health"
 	"github.com/teakingwang/grpc-demo/pkg/logger"
 	"github.com/teakingwang/grpc-demo/pkg/middleware"
-	pb "github.com/teakingwang/grpc-demo/proto/user"
+	pb "github.com/teakingwang/grpc-demo/proto/user/gen"
 	"github.com/teakingwang/grpc-demo/user-service/internal/service"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"

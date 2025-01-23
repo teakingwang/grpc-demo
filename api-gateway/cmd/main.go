@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/teakingwang/grpc-demo/pkg/discovery"
-	userpb "github.com/teakingwang/grpc-demo/proto/user"
+	userpb "github.com/teakingwang/grpc-demo/proto/user/gen"
 )
 
 // 添加一个认证中间件

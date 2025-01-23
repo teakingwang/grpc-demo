@@ -29,16 +29,16 @@ LDFLAGS := -X main.Version=$(VERSION) -X main.BuildTime=$(BUILD_TIME)
 
 all: proto user-service api-gateway etcd
 
-# 生成 proto 文件
+# 生成 proto 文件， --proto_path可以使用-I代替
 proto:
 	@echo "生成 proto 文件..."
-	@mkdir -p $(PROTO_DIR)/user
-	protoc --proto_path=. \
-		--proto_path=./third_party/googleapis \
-		--go_out=. --go_opt=paths=source_relative \
-		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		--grpc-gateway_out=. --grpc-gateway_opt=paths=source_relative \
-		$(PROTO_DIR)/user/user.proto
+	@mkdir -p $(PROTO_DIR)/user/gen
+	protoc --proto_path=$(PROTO_DIR)/user \
+		--proto_path=$(PROTO_DIR) \
+		--go_out=$(PROTO_DIR)/user/gen --go_opt=paths=source_relative \
+		--go-grpc_out=$(PROTO_DIR)/user/gen --go-grpc_opt=paths=source_relative \
+		--grpc-gateway_out=$(PROTO_DIR)/user/gen --grpc-gateway_opt=paths=source_relative \
+		$(PROTO_DIR)/user/*.proto
 # 如果有其他微服务proto，安装相同的方式生成即可
 
 # 构建 user-service

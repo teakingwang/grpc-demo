@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package user;
 option go_package = "grpc-demo/proto/user";
-
 import "google/api/annotations.proto";
 
 // UserService 用户服务接口定义
