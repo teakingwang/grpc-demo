@@ -68,6 +68,7 @@ services:
     restart: on-failure
     volumes:
       - ./configs/user-service/config.${ENV:-dev}.yaml:/app/configs/config.yaml
+      - ./certs:/app/certs
 
   # API网关服务
   api-gateway:

@@ -46,13 +46,23 @@ func main() {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		cfg.Database.User, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.Dbname)
 	db, err := sql.Open("mysql", dsn)
+	log.Println(dsn)
 	if err != nil {
 		logger.Fatal("Failed to connect to database", zap.Error(err))
 	}
 	defer db.Close()
 
+	// 启用 TLS
+	//certFile := "./certs/server.crt"
+	//keyFile := "./certs/server.key"
+	//creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
+	//if err != nil {
+	//	log.Fatalf("failed to load server TLS certificates: %v", err)
+	//}
+
 	// 创建gRPC服务器并注册中间件
 	grpcServer := grpc.NewServer(
+		//grpc.Creds(creds), // 启用TLS
 		grpc.ChainUnaryInterceptor(
 			middleware.LoggingInterceptor, // 日志中间件
 			middleware.AuthInterceptor,    // 认证中间件

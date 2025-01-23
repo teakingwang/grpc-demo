@@ -26,11 +26,12 @@ WORKDIR /app
 COPY --from=builder /app/grpc-demo/bin/user-service .
 COPY --from=builder /bin/grpc_health_probe /bin/grpc_health_probe
 
-# 创建配置文件目录
-RUN mkdir -p /app/configs
+# 创建证书目录
+RUN mkdir -p /app/certs
 
 # 从构建阶段复制编译好的二进制文件和配置文件到运行阶段
 COPY --from=builder /app/grpc-demo/bin/user-service .
+COPY --from=builder /app/grpc-demo/certs/* /app/certs/
 
 EXPOSE 50051
 

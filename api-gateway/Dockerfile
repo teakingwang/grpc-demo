@@ -20,12 +20,12 @@ FROM alpine:latest
 RUN apk add --no-cache netcat-openbsd curl busybox-extras
 WORKDIR /app
 
-# 创建配置文件目录
-RUN mkdir -p /app/configs
+# 创建证书目录
+RUN mkdir -p /app/certs
 
 # 从构建阶段复制编译好的二进制文件和配置文件到运行阶段
 COPY --from=builder /app/grpc-demo/bin/api-gateway .
-COPY --from=builder /app/grpc-demo/configs/api-gateway/config*.yaml ./configs/
+COPY --from=builder /app/grpc-demo/certs/* ./certs/
 
 # 声明容器将监听的端口号
 EXPOSE 8080

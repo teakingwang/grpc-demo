@@ -71,6 +71,16 @@ grpcurl -H "Authorization: Bearer your_token_value" -d '{"id": "1"}' -plaintext 
 
 # 测试grpcgateway
 curl -H "Authorization: Bearer your_token_value" http://localhost:8080/v1/user/1
+
+# TSL
+# 生成私钥
+openssl genpkey -algorithm RSA -out server.key -pkeyopt rsa_keygen_bits:2048
+
+# 生成证书签名请求（CSR）
+openssl req -new -key server.key -out server.csr -subj "/CN=localhost"
+
+# 生成自签名证书
+openssl x509 -req -in server.csr -signkey server.key -out server.crt -days 365
 ```
 
 ### 使用 Docker 运行
