@@ -6,7 +6,9 @@ scrape_configs:
   - job_name: 'user-service'
     static_configs:
       - targets: ['user-service:9090']
-  
-  - job_name: 'message-service'
-    static_configs:
-      - targets: ['message-service:9090']
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - "localhost:9093" # Alertmanager 地址

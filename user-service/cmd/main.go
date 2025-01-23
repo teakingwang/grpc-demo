@@ -106,7 +106,7 @@ func main() {
 	go func() {
 		mux := http.NewServeMux()
 		mux.Handle("/metrics", promhttp.Handler())
-		if err := http.ListenAndServe(":9091", mux); err != nil {
+		if err := http.ListenAndServe(":9090", mux); err != nil {
 			logger.Fatal("Failed to start metrics server", zap.Error(err))
 		}
 	}()
