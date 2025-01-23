@@ -144,7 +144,7 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml           # 主配置文件
       - ./prometheus/rules:/etc/prometheus/rules                 # 告警规则目录
     ports:
-      - "9092:9090"                   # Web UI端口
+      - "9090:9090"                   # Web UI端口
     networks:
       - grpc_net
     depends_on:
